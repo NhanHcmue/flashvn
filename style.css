@@ -153,7 +153,7 @@ p {
     padding: 10px 20px;
     font-size: 1.2em;
     border-radius: 10px;
-    border: 2px solid black;
+    border: none;
     cursor: pointer;
 }
 
@@ -193,7 +193,7 @@ p {
     font-size: 1.5em;
     font-weight: bold;
     border-radius: 15px;
-    border: 3px solid black;
+    border: none;
     cursor: pointer;
     transition: 0.3s;
 }
