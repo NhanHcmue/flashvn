@@ -12,7 +12,7 @@
         <h1>Chào bạn</h1>
         <p>Vui lòng chọn vai trò</p>
         <div class="role-buttons">
-            <button class="role-button student" onclick="chooseRole('student')">Học Sinh</button>
+            <!-- <button class="role-button student" onclick="chooseRole('student')">Học Sinh</button> -->
             <button class="role-button teacher" onclick="chooseRole('teacher')">Giáo viên</button>
             <button class="role-button admin" onclick="chooseRole('admin')">Admin</button>
         </div>

@@ -27,15 +27,18 @@
         <label for="answer">Email</label>
         <input id="answer" name="answer" rows="2" placeholder="Nhập email" required></input>
         
-        <label for="answer">Mật khẩu</label>
-        <input id="answer" name="answer" rows="2" placeholder="Nhập mật khẩu" required></i>
+        <label for="password">Mật khẩu</label>
+        <input id="password" name="password" rows="2" placeholder="Nhập mật khẩu" required></i>
+        
+        <label for="confirmpass">Xác nhận mật khẩu</label>
+        <input id="confirmpass" name="confirmpass" rows="2" placeholder="Nhập lại mật khẩu" required></i>
 
-        <label for="topic">Vai trò</label>
+        <!-- <label for="topic">Vai trò</label>
         <select id="topic" name="topic" required>
             <option value="">Vui lòng chọn vai trò</option>
             <option value="Module_1">Giáo viên</option>
             <option value="Module_2">Admin</option>
-        </select>       
+        </select>        -->
 
         <button type="submit" class="btn-add">Thêm</button>
         <button type="button" class="btn-cancel" onclick="window.location.href='manage_users.php'">Hủy</button>
