@@ -72,9 +72,29 @@
                 <button class="btn btn-delete" onclick="deleteQuestion(2)">Xóa</button></td>
             </tr>
         </tbody>
-    </table>
+    </table>   
+</body>
+</html>
+<?php
+include '../config/db.php';
+session_start();
 
-    <script>
+$teacher_email = $_SESSION['email']; // Email của giáo viên đang đăng nhập
+$qr_code = ""; // Mặc định rỗng
+
+// lấy mã QR từ database
+$sql = "SELECT qr_code FROM users WHERE email = '$teacher_email'";
+$result = $conn->query($sql);
+
+if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    $qr_code = $row['qr_code']; // Lấy mã QR
+}
+
+$conn->close();
+?>
+
+<script>
         function editQuestion(id) {
             window.location.href = 'edit.php?id=' + id;
         }
@@ -86,23 +106,21 @@
         }
 
         function showQRCode() {
-            let qrContainer = document.getElementById("qr-container");
-            qrContainer.style.display = "block"; // Hiển thị div chứa QR
+        let qrContainer = document.getElementById("qr-container");
+        qrContainer.style.display = "block"; // Hiển thị div chứa QR
 
-            let qrDiv = document.getElementById("qrcode");
-            qrDiv.innerHTML = ""; // Xóa QR cũ (nếu có)
+        let qrDiv = document.getElementById("qrcode");
+        qrDiv.innerHTML = ""; // Xóa QR cũ (nếu có)
 
-            new QRCode(qrDiv, {
-                text: "https://example.com/cau-hoi", // Link tới câu hỏi
-                width: 800,
-                height: 800
-            });
-        }
+        new QRCode(qrDiv, {
+            text: "https://yourwebsite.com/questions.php?teacher=<?php echo $qr_code; ?>", 
+            width: 200,
+            height: 200
+        });
+    }
 
         function hideQRCode() {
             document.getElementById("qr-container").style.display = "none";
             document.getElementById("overlay").style.display = "none";
         }
     </script>
-</body>
-</html>

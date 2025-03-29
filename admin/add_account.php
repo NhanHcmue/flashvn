@@ -46,3 +46,40 @@
 
 </body>
 </html>
+<?php
+include '../config/db.php';
+include '../libs/phpqrcode/qrlib.php'; // Nhúng thư viện QR Code
+
+// tạo mã QR cố định dựa vào email
+function generateQRCode($email) {
+    return md5($email);
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $_POST["username"];
+    $email = $_POST["email"];
+    $password = password_hash($_POST["password"], PASSWORD_BCRYPT);
+    $role = "teacher";
+
+    // Kiểm tra email đã tồn tại chưa
+    $check = $conn->query("SELECT * FROM users WHERE email='$email'");
+    if ($check->num_rows > 0) {
+        echo "Email đã tồn tại!";
+    } else {
+        $qr_code = generateQRCode($email);
+        $sql = "INSERT INTO users (username, email, password, role, qr_code) 
+                VALUES ('$username', '$email', '$password', '$role', '$qr_code')";
+
+        if ($conn->query($sql) === TRUE) {
+            // Tạo ảnh QR
+            $qr_image = "../image/qrcodes/" . $qr_code . ".png";
+            QRcode::png("https://mywebsite.com/teacher?id=$qr_code", $qr_image, QR_ECLEVEL_L, 5);
+            echo "Thêm tài khoản thành công! <img src='$qr_image'>";
+        } else {
+            echo "Lỗi: " . $conn->error;
+        }
+    }
+}
+
+$conn->close();
+?>
