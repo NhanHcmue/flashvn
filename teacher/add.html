@@ -1,58 +1,9 @@
-<?php
-include '../config/db.php';
-
-if (!isset($_GET['id'])) {
-    echo "Không tìm thấy chủ đề!";
-    exit;
-}
-
-$topic_id = $_GET['id'];
-
-$sql = "SELECT * FROM topics WHERE id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $topic_id);
-$stmt->execute();
-$topic_result = $stmt->get_result();
-$topic = $topic_result->fetch_assoc();
-$stmt->close();
-
-$sql = "
-    SELECT q.id AS question_id, q.content AS question_content, 
-           a.id AS answer_id, a.content AS answer_content, a.is_correct
-    FROM questions q
-    LEFT JOIN answers a ON q.id = a.question_id
-    WHERE q.topic_id = ?
-";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $topic_id);
-$stmt->execute();
-$questions_result = $stmt->get_result();
-$stmt->close();
-$conn->close();
-
-$questions = [];
-while ($row = $questions_result->fetch_assoc()) {
-    $q_id = $row['question_id'];
-    if (!isset($questions[$q_id])) {
-        $questions[$q_id] = [
-            'content' => $row['question_content'],
-            'answers' => []
-        ];
-    }
-    $questions[$q_id]['answers'][] = [
-        'id' => $row['answer_id'],
-        'content' => $row['answer_content'],
-        'is_correct' => $row['is_correct']
-    ];
-}
-?>
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chỉnh sửa Chủ Đề</title>
+    <title>Thêm câu hỏi</title>
     <style>
         body { text-align: center; font-family: Arial, sans-serif; padding: 20px; }
         h1 { background-color: green; color: white; padding: 10px; border-radius: 5px; }
@@ -136,36 +87,27 @@ while ($row = $questions_result->fetch_assoc()) {
     </script>
 </head>
 <body>
-    <h1>Chỉnh sửa Chủ Đề</h1>
-    <form method="POST" action="update_topic.php">
-        <input type="hidden" name="topic_id" value="<?php echo $topic_id; ?>">
-        
+    <h1>Thêm Chủ Đề</h1>
+    <form method="POST" action="add_question.php">
         <label for="title">Chủ đề</label>
-        <input type="text" id="title" name="title" value="<?php echo htmlspecialchars($topic['title']); ?>" required>
+        <input type="text" id="title" name="title" required>
 
         <label for="description">Mô Tả Chủ đề</label>
-        <input type="text" id="description" name="description" value="<?php echo htmlspecialchars($topic['description']); ?>" required>
+        <input type="text" id="description" name="description" required>
 
-        <div class="question-container">
-            <?php foreach ($questions as $q_id => $question): ?>
-                <div class="question-block">
-                    <label for="question_<?php echo $q_id; ?>">Câu hỏi</label>
-                    <textarea id="question_<?php echo $q_id; ?>" name="question_<?php echo $q_id; ?>" rows="2" required><?php echo htmlspecialchars($question['content']); ?></textarea>
-                    <div class="answer-container">
-                        <label>Đáp án</label>
-                        <?php foreach ($question['answers'] as $index => $answer): ?>
-                            <div class="answer-input-container">
-                                <input type="radio" name="correct_answer_<?php echo $q_id; ?>" value="<?php echo $answer['id']; ?>" <?php echo ($answer['is_correct'] ? 'checked' : ''); ?>>
-                                <input type="text" name="answer_<?php echo $answer['id']; ?>" value="<?php echo htmlspecialchars($answer['content']); ?>" required>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
+        <div class="question-container"></div>
         <button type="button" class="btn-add" onclick="addQuestion()">+</button>
 
-        <button type="submit" class="btn-save">Lưu</button>
+        <label for="age">Độ tuổi</label>
+        <select id="age" name="age" required>
+            <option value="">Vui lòng chọn độ tuổi</option>
+            <option value="1-2">Lớp 1-2</option>
+            <option value="3-5">Lớp 3-5</option>
+            <option value="6-8">Lớp 6-8</option>
+            <option value="9-12">Lớp 9-12</option>
+        </select>
+
+        <button type="submit" class="btn-add">Thêm</button>
         <button type="button" class="btn-cancel" onclick="window.location.href='dashboard.php'">Hủy</button>
     </form>
 </body>
