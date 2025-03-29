@@ -1,3 +1,22 @@
+<?php
+include '../config/db.php';
+session_start();
+
+$teacher_email = $_SESSION['email']; // Email của giáo viên đang đăng nhập
+$qr_code = ""; 
+
+// Lấy mã giáo viên từ database
+$sql = "SELECT qr_code FROM users WHERE email = '$teacher_email'";
+$result = $conn->query($sql);
+
+if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    $qr_code = $row['qr_code']; 
+}
+
+$conn->close();
+?>
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -95,32 +114,33 @@ $conn->close();
 ?>
 
 <script>
-        function editQuestion(id) {
-            window.location.href = 'edit.php?id=' + id;
-        }
-
-        function deleteQuestion(id) {
-            if (confirm("Bạn có chắc muốn xóa câu hỏi này?")) {
-                window.location.href = 'delete.php?id=' + id;
-            }
-        }
-
-        function showQRCode() {
-        let qrContainer = document.getElementById("qr-container");
-        qrContainer.style.display = "block"; // Hiển thị div chứa QR
-
-        let qrDiv = document.getElementById("qrcode");
-        qrDiv.innerHTML = ""; // Xóa QR cũ (nếu có)
-
-        new QRCode(qrDiv, {
-            text: "https://yourwebsite.com/questions.php?teacher=<?php echo $qr_code; ?>", 
-            width: 200,
-            height: 200
-        });
+    function editQuestion(id) {
+        window.location.href = 'edit.php?id=' + id;
     }
 
-        function hideQRCode() {
-            document.getElementById("qr-container").style.display = "none";
-            document.getElementById("overlay").style.display = "none";
+    function deleteQuestion(id) {
+        if (confirm("Bạn có chắc muốn xóa câu hỏi này?")) {
+                window.location.href = 'delete.php?id=' + id;
         }
-    </script>
+    }
+
+    function showQRCode() {
+    let qrContainer = document.getElementById("qr-container");
+    qrContainer.style.display = "block"; // Hiển thị modal mã QR
+
+    let qrDiv = document.getElementById("qrcode");
+    qrDiv.innerHTML = ""; // Xóa QR cũ trước khi tạo mới
+
+    let qrData = "https://yourwebsite.com/questions.php?teacher=<?php echo urlencode($qr_code); ?>";
+
+    new QRCode(qrDiv, {
+        text: qrData, 
+        width: 200,
+        height: 200
+    });
+    }
+
+    function hideQRCode() {
+    document.getElementById("qr-container").style.display = "none";
+    }
+</script>

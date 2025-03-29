@@ -1,3 +1,11 @@
+<?php
+include '../config/db.php'; // Kết nối database
+
+// Truy vấn danh sách tài khoản từ bảng users
+$sql = "SELECT id, username, email FROM users";
+$result = $conn->query($sql);
+?>
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -31,28 +39,33 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>Ten_tk1</td>
-                <td>gvien123@gmail.com</td>
-                <td><button class="btn btn-edit" onclick="editQuestion(1)">Sửa</button>
-                <button class="btn btn-delete" onclick="deleteQuestion(1)">Xóa</button></td>
-            </tr>
-            <tr>
-                <td>Tên_tk2</td>
-                <td>gvien456@gmail.com</td>
-                <td><button class="btn btn-edit" onclick="editQuestion(1)">Sửa</button>
-                <button class="btn btn-delete" onclick="deleteQuestion(1)">Xóa</button></td>
-            </tr>
+            <?php
+            if ($result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                    echo "<tr>
+                        <td>{$row['username']}</td>
+                        <td>{$row['email']}</td>
+                        <td>
+                            <button class='btn btn-edit' onclick='editUser({$row['id']})'>Sửa</button>
+                            <button class='btn btn-delete' onclick='deleteUser({$row['id']})'>Xóa</button>
+                        </td>
+                    </tr>";
+                }
+            } else {
+                echo "<tr><td colspan='3'>Không có tài khoản nào</td></tr>";
+            }
+            $conn->close();
+            ?>
         </tbody>
     </table>
 
     <script>
-        function editQuestion(id) {
+        function editUser(id) {
             window.location.href = 'edit_account.php?id=' + id;
         }
 
-        function deleteQuestion(id) {
-            if (confirm("Bạn có chắc muốn tài khoản này?")) {
+        function deleteUser(id) {
+            if (confirm("Bạn có chắc muốn xóa tài khoản này?")) {
                 window.location.href = 'delete_account.php?id=' + id;
             }
         }

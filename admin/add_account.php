@@ -17,68 +17,86 @@
     </style>
 </head>
 <body>
-
     <h1>Thêm tài khoản</h1>
-
     <form method="POST">
-        <label for="question_text">Tên tài khoản</label>
-        <input id="question_text" name="question_text" rows="2" placeholder="Nhập tên tài khoản" required></input>
+        <label for="username">Tên tài khoản</label>
+        <input id="username" name="username" placeholder="Nhập tên tài khoản" required>
 
-        <label for="answer">Email</label>
-        <input id="answer" name="answer" rows="2" placeholder="Nhập email" required></input>
-        
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" placeholder="Nhập email" required>
+
         <label for="password">Mật khẩu</label>
-        <input id="password" name="password" rows="2" placeholder="Nhập mật khẩu" required></i>
-        
-        <label for="confirmpass">Xác nhận mật khẩu</label>
-        <input id="confirmpass" name="confirmpass" rows="2" placeholder="Nhập lại mật khẩu" required></i>
+        <input id="password" name="password" type="password" placeholder="Nhập mật khẩu" required>
 
-        <!-- <label for="topic">Vai trò</label>
-        <select id="topic" name="topic" required>
-            <option value="">Vui lòng chọn vai trò</option>
-            <option value="Module_1">Giáo viên</option>
-            <option value="Module_2">Admin</option>
-        </select>        -->
+        <label for="confirmpass">Xác nhận mật khẩu</label>
+        <input id="confirmpass" name="confirmpass" type="password" placeholder="Nhập lại mật khẩu" required>
 
         <button type="submit" class="btn-add">Thêm</button>
         <button type="button" class="btn-cancel" onclick="window.location.href='manage_users.php'">Hủy</button>
     </form>
-
 </body>
 </html>
 <?php
 include '../config/db.php';
-include '../libs/phpqrcode/qrlib.php'; // Nhúng thư viện QR Code
+include '../libs/phpqrcode/qrlib.php'; // Kiểm tra đường dẫn này
 
-// tạo mã QR cố định dựa vào email
+// Hàm tạo mã QR dựa trên email
 function generateQRCode($email) {
-    return md5($email);
+    return md5($email); // Mã hóa email thành chuỗi duy nhất
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST["username"];
     $email = $_POST["email"];
-    $password = password_hash($_POST["password"], PASSWORD_BCRYPT);
+    $password = $_POST["password"];
+    $confirmpass = $_POST["confirmpass"];
     $role = "teacher";
 
+    // Kiểm tra xác nhận mật khẩu
+    if ($password !== $confirmpass) {
+        echo "Mật khẩu xác nhận không khớp!";
+        exit;
+    }
+
+    // Mã hóa mật khẩu
+    $password_hash = password_hash($password, PASSWORD_BCRYPT);
+
     // Kiểm tra email đã tồn tại chưa
-    $check = $conn->query("SELECT * FROM users WHERE email='$email'");
-    if ($check->num_rows > 0) {
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
         echo "Email đã tồn tại!";
     } else {
+        // Tạo mã QR
         $qr_code = generateQRCode($email);
-        $sql = "INSERT INTO users (username, email, password, role, qr_code) 
-                VALUES ('$username', '$email', '$password', '$role', '$qr_code')";
 
-        if ($conn->query($sql) === TRUE) {
+        // Thêm tài khoản vào cơ sở dữ liệu
+        $stmt = $conn->prepare("INSERT INTO users (username, email, password, role, qr_code) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssss", $username, $email, $password_hash, $role, $qr_code);
+
+        if ($stmt->execute()) {
+            // Tạo thư mục lưu QR nếu chưa tồn tại
+            $qr_dir = "../image/qrcodes/";
+            if (!file_exists($qr_dir)) {
+                mkdir($qr_dir, 0777, true);
+            }
+
             // Tạo ảnh QR
-            $qr_image = "../image/qrcodes/" . $qr_code . ".png";
+            $qr_image = $qr_dir . $qr_code . ".png";
             QRcode::png("https://mywebsite.com/teacher?id=$qr_code", $qr_image, QR_ECLEVEL_L, 5);
-            echo "Thêm tài khoản thành công! <img src='$qr_image'>";
+
+            echo "<script>
+                alert('Thêm tài khoản thành công!');
+                window.location.href = 'manage_users.php';
+            </script>";
         } else {
             echo "Lỗi: " . $conn->error;
         }
     }
+    $stmt->close();
 }
 
 $conn->close();
