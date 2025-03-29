@@ -38,7 +38,7 @@
 </html>
 <?php
 include '../config/db.php';
-include '../libs/phpqrcode/qrlib.php'; // Kiểm tra đường dẫn này
+include '../libs/phpqrcode/qrlib.php'; // Kiểm tra đường dẫn 
 
 // Hàm tạo mã QR dựa trên email
 function generateQRCode($email) {
@@ -86,7 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Tạo ảnh QR
             $qr_image = $qr_dir . $qr_code . ".png";
-            QRcode::png("https://mywebsite.com/teacher?id=$qr_code", $qr_image, QR_ECLEVEL_L, 5);
+            QRcode::png("https://flashvn.org/level.php?teacher_id=$users_id", $qr_image, QR_ECLEVEL_L, 5);
 
             echo "<script>
                 alert('Thêm tài khoản thành công!');
