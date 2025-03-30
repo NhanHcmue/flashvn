@@ -2,7 +2,7 @@
 $servername = "localhost";
 $username = "root";
 $password = "";
-$dbname = "flashvn_db";
+$dbname = "flash_vn";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 

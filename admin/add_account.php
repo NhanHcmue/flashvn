@@ -1,3 +1,39 @@
+<?php
+require "../config/db.php";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = trim($_POST["username"]);
+    $email = trim($_POST["email"]);
+    $password = trim($_POST["password"]);
+    $confirmpass = trim($_POST["confirmpass"]);
+    $role = $_POST["role"];
+
+    if ($password !== $confirmpass) {
+        echo "<script>alert('Mật khẩu xác nhận không khớp!');</script>";
+    } else {
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $stmt->store_result();
+
+        if ($stmt->num_rows > 0) {
+            echo "<script>alert('Email đã tồn tại!');</script>";
+        } else {
+            $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("ssss", $username, $email, $hashedPassword, $role);
+
+            if ($stmt->execute()) {
+                echo "<script>alert('Thêm tài khoản thành công!'); window.location.href = 'manage_users.php';</script>";
+            } else {
+                echo "<script>alert('Lỗi khi thêm tài khoản!');</script>";
+            }
+        }
+        $stmt->close();
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -5,7 +41,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thêm tài khoản</title>
     <style>
-        body { text-align: center; padding: 20px; }
+        body { text-align: center; padding: 20px; font-family: Arial, sans-serif; }
         h1 { background-color: green; color: white; padding: 10px; border-radius: 5px; }
         form { width: 60%; margin: auto; }
         label { font-size: 1.2em; font-weight: bold; display: block; text-align: left; margin: 10px 0; }
@@ -17,87 +53,32 @@
     </style>
 </head>
 <body>
+
     <h1>Thêm tài khoản</h1>
-    <form method="POST">
+
+    <form method="POST" action="">
         <label for="username">Tên tài khoản</label>
-        <input id="username" name="username" placeholder="Nhập tên tài khoản" required>
+        <input type="text" id="username" name="username" placeholder="Nhập tên tài khoản" required>
 
         <label for="email">Email</label>
-        <input id="email" name="email" type="email" placeholder="Nhập email" required>
+        <input type="email" id="email" name="email" placeholder="Nhập email" required>
 
         <label for="password">Mật khẩu</label>
-        <input id="password" name="password" type="password" placeholder="Nhập mật khẩu" required>
+        <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required>
 
         <label for="confirmpass">Xác nhận mật khẩu</label>
-        <input id="confirmpass" name="confirmpass" type="password" placeholder="Nhập lại mật khẩu" required>
+        <input type="password" id="confirmpass" name="confirmpass" placeholder="Nhập lại mật khẩu" required>
+
+        <label for="role">Vai trò</label>
+        <select id="role" name="role" required>
+            <option value="">Vui lòng chọn vai trò</option>
+            <option value="teacher">Giáo viên</option>
+            <option value="admin">Admin</option>
+        </select>  
 
         <button type="submit" class="btn-add">Thêm</button>
         <button type="button" class="btn-cancel" onclick="window.location.href='manage_users.php'">Hủy</button>
     </form>
+
 </body>
 </html>
-<?php
-include '../config/db.php';
-include '../libs/phpqrcode/qrlib.php'; // Kiểm tra đường dẫn 
-
-// Hàm tạo mã QR dựa trên email
-function generateQRCode($email) {
-    return md5($email); // Mã hóa email thành chuỗi duy nhất
-}
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST["username"];
-    $email = $_POST["email"];
-    $password = $_POST["password"];
-    $confirmpass = $_POST["confirmpass"];
-    $role = "teacher";
-
-    // Kiểm tra xác nhận mật khẩu
-    if ($password !== $confirmpass) {
-        echo "Mật khẩu xác nhận không khớp!";
-        exit;
-    }
-
-    // Mã hóa mật khẩu
-    $password_hash = password_hash($password, PASSWORD_BCRYPT);
-
-    // Kiểm tra email đã tồn tại chưa
-    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        echo "Email đã tồn tại!";
-    } else {
-        // Tạo mã QR
-        $qr_code = generateQRCode($email);
-
-        // Thêm tài khoản vào cơ sở dữ liệu
-        $stmt = $conn->prepare("INSERT INTO users (username, email, password, role, qr_code) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssss", $username, $email, $password_hash, $role, $qr_code);
-
-        if ($stmt->execute()) {
-            // Tạo thư mục lưu QR nếu chưa tồn tại
-            $qr_dir = "../image/qrcodes/";
-            if (!file_exists($qr_dir)) {
-                mkdir($qr_dir, 0777, true);
-            }
-
-            // Tạo ảnh QR
-            $qr_image = $qr_dir . $qr_code . ".png";
-            QRcode::png("https://flashvn.org/level.php?teacher_id=$users_id", $qr_image, QR_ECLEVEL_L, 5);
-
-            echo "<script>
-                alert('Thêm tài khoản thành công!');
-                window.location.href = 'manage_users.php';
-            </script>";
-        } else {
-            echo "Lỗi: " . $conn->error;
-        }
-    }
-    $stmt->close();
-}
-
-$conn->close();
-?>
