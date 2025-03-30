@@ -1,11 +1,11 @@
 <?php
-session_start();
-if (!isset($_SESSION['teacher_id']) || !isset($_GET['topic_id'])) {
-    die("Lỗi: Không tìm thấy dữ liệu.");
-}
-$teacher_id = $_SESSION['teacher_id'];
-$topic_id = $_GET['topic_id'];
-echo "Hiển thị câu hỏi của giáo viên $teacher_id, chủ đề $topic_id";
+// session_start();
+// if (!isset($_SESSION['teacher_id']) || !isset($_GET['topic_id'])) {
+//     die("Lỗi: Không tìm thấy dữ liệu.");
+// }
+// $teacher_id = $_SESSION['teacher_id'];
+// $topic_id = $_GET['topic_id'];
+// echo "Hiển thị câu hỏi của giáo viên $teacher_id, chủ đề $topic_id";
 ?>
 
 <!DOCTYPE html>
@@ -14,7 +14,8 @@ echo "Hiển thị câu hỏi của giáo viên $teacher_id, chủ đề $topic_
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Câu Hỏi</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style1.css">
+    <link rel="stylesheet" href="style2.css">
     <script>
         function rollDice() {
             const dice = document.getElementById('dice');

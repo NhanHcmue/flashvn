@@ -1,33 +1,37 @@
-<?php
-session_start();
-// if (!isset($_SESSION['users_id'])) {
-//     $_SESSION['users_id'] = 3; // Tạm thời đặt ID giáo viên là 3 để test giả lập
-// }
-// echo "ID Giáo viên: " . $_SESSION['users_id'];
-include '../config/db.php';
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Danh sách chủ đề</title>
+    <style>
+        body {font-family: sans-serif;display: flex;justify-content: center;align-items: center;height: 100vh;margin: 0;background-color: #f4f4f4;}
+        .div-container {text-align: center;background-color: white;padding: 40px;border-radius: 8px;box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);}
+        h1 {margin-bottom: 20px;}
+        button {padding: 10px 20px;margin: 5px;width: 200px;border: none;border-radius: 5px;background-color: #007bff;color: white;cursor: pointer;}
+        button:hover {background-color: #0056b3;}
+    </style>
+</head>
+<body>
+    <div class="div-container">
+        <h1>Chào bạn</h1>
+        <p>Vui lòng chọn chủ đề</p>
+        <div id="topics-list">
+            </div>
+    </div>
 
-$teacher_id = $_SESSION['users_id']; // Lấy ID giáo viên từ session
-$age = $_GET['age']; // Lấy độ tuổi từ URL
-
-$stmt = $conn->prepare("SELECT * FROM topics WHERE teacher_id = ? AND age_group = ?");
-$stmt->bind_param("is", $teacher_id, $age);
-$stmt->execute();
-$result = $stmt->get_result();
-
-echo "<h1>Chọn Chủ Đề</h1>";
-echo "<p>Vui lòng chọn chủ đề</p>";
-echo "<div class='topics-container'>";
-
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        echo '<a href="questions.php?topic_id=' . $row['id'] . '" class="topic-button">' . $row['topic_name'] . '</a>';
-    }
-} else {
-    echo "<p>Không có chủ đề nào!</p>";
-}
-
-echo "</div>";
-
-$stmt->close();
-$conn->close();
-?>
+    <script>
+        fetch('get_topics_data.php')
+            .then(response => response.json())
+            .then(data => {
+                const topicsList = document.getElementById('topics-list');
+                data.forEach(topic => {
+                    const button = document.createElement('button');
+                    button.textContent = topic.title;
+                    button.addEventListener('click', () => {
+                        window.location.href = `questions.php?topic_id=${topic.id}`;
+                    });
+                    topicsList.appendChild(button);
+                });
+            });
+    </script>
+</body>
+</html>
