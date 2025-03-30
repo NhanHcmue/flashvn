@@ -2,10 +2,9 @@
 session_start();
 require "config/db.php";
 
-$error = ""; // Định nghĩa biến lỗi để tránh lỗi Undefined variable
+$error = ""; 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Kiểm tra xem username và password có tồn tại không
     $username = isset($_POST["username"]) ? trim($_POST["username"]) : "";
     $password = isset($_POST["password"]) ? trim($_POST["password"]) : "";
 
@@ -17,7 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $result = $stmt->get_result();
 
         if ($row = $result->fetch_assoc()) {
-            if (password_verify($password, $row["password"])) { // Kiểm tra mật khẩu đã mã hóa
+            if (password_verify($password, $row["password"])) { 
                 $_SESSION["user_id"] = $row["id"];
                 $_SESSION["username"] = $row["username"];
                 $_SESSION["role"] = $row["role"];
