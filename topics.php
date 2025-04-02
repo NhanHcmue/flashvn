@@ -1,3 +1,21 @@
+<?php
+require "../config/db.php";
+
+// Kiểm tra tham số teacher_id và age
+if (!isset($_GET['user_id']) || !isset($_GET['age'])) {
+    die("Lỗi: Dữ liệu không hợp lệ!");
+}
+
+$teacher_id = $_GET['user_id'];
+$age = $_GET['age'];
+
+// Truy vấn danh sách chủ đề của giáo viên theo độ tuổi
+$stmt = $conn->prepare("SELECT id, topic_name FROM topics WHERE teacher_id = ? AND age_group = ?");
+$stmt->bind_param("is", $teacher_id, $age);
+$stmt->execute();
+$result = $stmt->get_result();
+?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -14,24 +32,13 @@
     <div class="div-container">
         <h1>Chào bạn</h1>
         <p>Vui lòng chọn chủ đề</p>
-        <div id="topics-list">
-            </div>
+        <div>
+            <?php while ($row = $result->fetch_assoc()): ?>
+                <a href="question.php?teacher_id=<?= $teacher_id ?>&topic_id=<?= $row['id'] ?>">
+                    <button><?= htmlspecialchars($row['topic_name']) ?></button>
+                </a>
+            <?php endwhile; ?>
+        </div>
     </div>
-
-    <script>
-        fetch('get_topics_data.php')
-            .then(response => response.json())
-            .then(data => {
-                const topicsList = document.getElementById('topics-list');
-                data.forEach(topic => {
-                    const button = document.createElement('button');
-                    button.textContent = topic.title;
-                    button.addEventListener('click', () => {
-                        window.location.href = `questions.php?topic_id=${topic.id}`;
-                    });
-                    topicsList.appendChild(button);
-                });
-            });
-    </script>
 </body>
 </html>

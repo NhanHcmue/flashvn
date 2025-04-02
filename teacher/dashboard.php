@@ -8,6 +8,7 @@ if (!isset($_SESSION['username'])) {
 }
 
 $teacher_username = $_SESSION['username'];
+$teacher_id = $_SESSION['user_id'];
 $qr_code = "";
 
 $sql = "SELECT qr_code FROM users WHERE username = ?";
@@ -49,6 +50,7 @@ $stmt->close();
         .btn-container {display: flex; gap: 10px; margin-bottom: 15px; margin-left: 10%;}
         .btn {width: 100px; height: 40px; font-size: 1.2em; font-weight: bold; text-align: center; border: none; border-radius: 10px; cursor: pointer;}
         .btn-add {background-color: green; color: white;}
+        .btn-logout {background-color: burlywood; color: white;}
         .btn-qr, .close-button {background-color: gray; color: white;}
         .btn-edit {background-color: yellow; color: black;}
         .btn-delete {background-color: red; color: black;}
@@ -71,6 +73,7 @@ $stmt->close();
             <div id="qrcode"></div>
             <button class="close-button" onclick="hideQRCode()">Đóng</button>
         </div>
+        <button class="btn btn-logout" onclick="window.location.href='logout.php'">Thoát</button>
     </div>
 
 
@@ -124,8 +127,8 @@ $stmt->close();
 
             new QRCode(qrDiv, {
                 text: qrData,
-                width: 200,
-                height: 200
+                width: 400,
+                height: 400
             });
         }
     </script>

@@ -1,11 +1,32 @@
 <?php
-// session_start();
-// if (!isset($_SESSION['teacher_id']) || !isset($_GET['topic_id'])) {
-//     die("Lỗi: Không tìm thấy dữ liệu.");
-// }
-// $teacher_id = $_SESSION['teacher_id'];
-// $topic_id = $_GET['topic_id'];
-// echo "Hiển thị câu hỏi của giáo viên $teacher_id, chủ đề $topic_id";
+require '../config/db.php';
+
+$teacher_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
+$topic_id = isset($_GET['topic_id']) ? intval($_GET['topic_id']) : 0;
+
+if ($teacher_id === 0 || $topic_id === 0) {
+    die("Thiếu thông tin giáo viên hoặc chủ đề!");
+}
+
+// Lấy câu hỏi ngẫu nhiên từ topic của giáo viên
+$stmt = $conn->prepare("SELECT id, question_text, option_1, option_2, option_3, option_4, correct_option FROM questions WHERE teacher_id = ? AND topic_id = ? ORDER BY RAND() LIMIT 1");
+$stmt->bind_param("ii", $teacher_id, $topic_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$question = $result->fetch_assoc();
+$stmt->close();
+
+if (!$question) {
+    die("Không tìm thấy câu hỏi!");
+}
+
+$options = [
+    1 => $question['option_1'],
+    2 => $question['option_2'],
+    3 => $question['option_3'],
+    4 => $question['option_4']
+];
+shuffle($options); // Tráo ngẫu nhiên câu trả lời
 ?>
 
 <!DOCTYPE html>
@@ -16,53 +37,96 @@
     <title>Câu Hỏi</title>
     <link rel="stylesheet" href="style1.css">
     <link rel="stylesheet" href="style2.css">
+    <style>
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .dice {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            background-color: white;
+            border: 2px solid black;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            animation: none;
+        }
+        @keyframes roll {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
     <script>
+        let totalScore = 0;
+        let correctCount = 0;
+        let currentDiceValue = 1;
+        
         function rollDice() {
             const dice = document.getElementById('dice');
-            const randomRotation = Math.floor(Math.random() * 360);
-            dice.style.transform = `rotate(${randomRotation}deg)`;
+            dice.style.animation = 'roll 0.6s ease-out';
+            setTimeout(() => {
+                currentDiceValue = Math.floor(Math.random() * 6) + 1;
+                dice.textContent = currentDiceValue;
+                dice.style.animation = 'none';
+            }, 600);
+        }
+        
+        function checkAnswer(correctAnswer) {
+            let selected = document.querySelector('input[name="answer"]:checked');
+            if (!selected) {
+                alert("Vui lòng chọn một đáp án!");
+                return;
+            }
+            let isCorrect = parseInt(selected.value) === correctAnswer;
+            let options = document.querySelectorAll('.correct-radio');
+            options.forEach(option => {
+                option.parentElement.classList.remove('correct', 'incorrect');
+                if (parseInt(option.value) === correctAnswer) {
+                    option.parentElement.classList.add('correct');
+                }
+            });
+            if (isCorrect) {
+                let points = 2 * currentDiceValue;
+                totalScore += points;
+                correctCount++;
+                document.getElementById("score").textContent = totalScore;
+            }
+        }
+        
+        function nextQuestion() {
+            rollDice();
+            setTimeout(() => {
+                window.location.href = `question.php?teacher_id=<?= $teacher_id ?>&topic_id=<?= $topic_id ?>`;
+            }, 800);
         }
     </script>
-    <style>
-        label { font-size: 1.2em; font-weight: bold; display: block; text-align: left; margin: 10px 0; }
-        .answer-container { width: 100%; margin-bottom: 20px; }
-        .answer-input-container { display: flex; align-items: center; margin-bottom: 5px; }
-        .answer-input { flex-grow: 1; padding: 10px; border: 2px solid black; box-sizing: border-box; }
-        .correct-radio { margin-right: 10px; }
-    </style>
 </head>
-<body>
+<body onload="rollDice()">
     <div class="question-container">
         <div class="dice-container">
-            <img id="dice" src="image/dice6.png" alt="Xúc xắc" class="dice-img" onclick="rollDice()">
+            <div id="dice" class="dice">6</div>
         </div>
-        <label for="question_text">"Thao túng thông tin" (Information Manipulation) có thể gây ra điều gì?</label>
-        
+        <label><?= htmlspecialchars($question['question_text']) ?></label>
         <div class="answer-container">
-            <div class="answer-input-container">
-                <input type="radio" name="correct_answer" value="1" class="correct-radio">
-                A. Nhiều mạng xã hội hơn
-            </div>
-            <div class="answer-input-container">
-                <input type="radio" name="correct_answer" value="2" class="correct-radio">
-                B. Mất tiếp cận thông tin
-            </div>
-            <div class="answer-input-container">
-                <input type="radio" name="correct_answer" value="3" class="correct-radio">
-                C. Nhận thức sai lệch về sự thật
-            </div>
-            <div class="answer-input-container">
-                <input type="radio" name="correct_answer" value="4" class="correct-radio">
-                D. Nhận thức sai lệch
-            </div>
+            <?php foreach ($options as $key => $option): ?>
+                <div class="answer-input-container">
+                    <input type="radio" name="answer" value="<?= $key ?>" class="correct-radio">
+                    <?= htmlspecialchars($option) ?>
+                </div>
+            <?php endforeach; ?>
         </div>
-
 
         <div class="button-container">
-            <button class="answer-button">Đáp án</button>
-            <button class="next-button">Câu kế tiếp</button>
+            <button onclick="checkAnswer(<?= $question['correct_option'] ?>)" class="answer-button">Đáp án</button>
+            <button onclick="nextQuestion()" class="next-button">Câu kế tiếp</button>
         </div>
     </div>
+    <div id="scoreboard">Tổng điểm: <span id="score">0</span></div>
 </body>
 </html>
-
