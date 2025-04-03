@@ -63,6 +63,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       <div class="row button">
         <input type="submit" value="Login" />
       </div>
+      <div class="row button">
+        <input type="play" style="text-align: center;" value="Playing as a guest" onclick="window.location.href='enter_code.php'"/>
+      </div>
     </form>
   </div>
 </body>

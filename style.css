@@ -1,0 +1,338 @@
+/* Reset mặc định */
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+}
+
+/* Container chung */
+.div-container, .level-container, .question-container, .end-container {
+    text-align: center;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px; /* Giới hạn chiều rộng tối đa cho máy tính */
+    margin: 20px;
+}
+
+/* Tiêu đề và đoạn văn */
+h1 {
+    margin-bottom: 10px;
+    font-size: 1.5em;
+    color: #333;
+}
+
+p {
+    color: #555;
+    margin-bottom: 20px;
+}
+
+/* CSS cho level.php */
+.level-container {
+    padding: 20px;
+}
+
+.level-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.level-button {
+    width: 100px;
+    height: 100px;
+    border-radius: 10px; /* Hình vuông với góc bo nhẹ */
+    border: none;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    transition: transform 0.2s;
+}
+
+.level-button:hover {
+    transform: scale(1.1);
+}
+
+/* CSS cho topics.php */
+.topic-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.topic-button {
+    padding: 10px;
+    font-size: 1.1em;
+    font-weight: bold;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    color: #333;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+}
+
+.topic-button:hover {
+    background-color: #f0f0f0;
+}
+
+/* CSS cho question.php */
+.question-container {
+    position: relative;
+    max-width: 500px; /* Tăng chiều rộng cho question.php */
+}
+
+#scoreboard {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.2em;
+    color: #333;
+}
+
+.dice-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    perspective: 1000px;
+}
+
+.dice {
+    width: 50px;
+    height: 50px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+}
+
+.dice-face {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    background-color: black;
+    border-radius: 50%;
+    position: absolute;
+}
+
+/* Mặt 1 */
+.face-1 .dot:nth-child(1) { top: 21px; left: 21px; }
+/* Mặt 2 */
+.face-2 .dot:nth-child(1) { top: 10px; left: 10px; }
+.face-2 .dot:nth-child(2) { top: 32px; left: 32px; }
+/* Mặt 3 */
+.face-3 .dot:nth-child(1) { top: 10px; left: 10px; }
+.face-3 .dot:nth-child(2) { top: 21px; left: 21px; }
+.face-3 .dot:nth-child(3) { top: 32px; left: 32px; }
+/* Mặt 4 */
+.face-4 .dot:nth-child(1) { top: 10px; left: 10px; }
+.face-4 .dot:nth-child(2) { top: 10px; left: 32px; }
+.face-4 .dot:nth-child(3) { top: 32px; left: 10px; }
+.face-4 .dot:nth-child(4) { top: 32px; left: 32px; }
+/* Mặt 5 */
+.face-5 .dot:nth-child(1) { top: 10px; left: 10px; }
+.face-5 .dot:nth-child(2) { top: 10px; left: 32px; }
+.face-5 .dot:nth-child(3) { top: 21px; left: 21px; }
+.face-5 .dot:nth-child(4) { top: 32px; left: 10px; }
+.face-5 .dot:nth-child(5) { top: 32px; left: 32px; }
+/* Mặt 6 */
+.face-6 .dot:nth-child(1) { top: 10px; left: 10px; }
+.face-6 .dot:nth-child(2) { top: 10px; left: 21px; }
+.face-6 .dot:nth-child(3) { top: 10px; left: 32px; }
+.face-6 .dot:nth-child(4) { top: 32px; left: 10px; }
+.face-6 .dot:nth-child(5) { top: 32px; left: 21px; }
+.face-6 .dot:nth-child(6) { top: 32px; left: 32px; }
+
+/* Định vị các mặt của xúc xắc */
+.face-1 { transform: rotateY(0deg) translateZ(25px); }
+.face-2 { transform: rotateY(90deg) translateZ(25px); }
+.face-3 { transform: rotateY(180deg) translateZ(25px); }
+.face-4 { transform: rotateY(-90deg) translateZ(25px); }
+.face-5 { transform: rotateX(90deg) translateZ(25px); }
+.face-6 { transform: rotateX(-90deg) translateZ(25px); }
+
+/* Animation quay xúc xắc */
+.show-1 { transform: rotateX(0deg) rotateY(0deg); }
+.show-2 { transform: rotateX(0deg) rotateY(-90deg); }
+.show-3 { transform: rotateX(0deg) rotateY(-180deg); }
+.show-4 { transform: rotateX(0deg) rotateY(90deg); }
+.show-5 { transform: rotateX(-90deg) rotateY(0deg); }
+.show-6 { transform: rotateX(90deg) rotateY(0deg); }
+
+label {
+    display: block;
+    font-size: 1.2em;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.answer-container {
+    margin-bottom: 20px;
+}
+
+.answer-input-container {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.answer-input-container.correct {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.answer-input-container.incorrect {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.answer-input-container input {
+    margin-right: 10px;
+}
+
+.correct-message {
+    color: #28a745;
+    font-weight: bold;
+    margin-top: 10px;
+    display: none;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.answer-button, .next-button, .exit-button {
+    padding: 10px 20px;
+    font-size: 1.1em;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.answer-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.answer-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.next-button {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    color: #333;
+}
+
+.next-button:hover {
+    background-color: #f0f0f0;
+}
+
+/* CSS cho màn hình kết thúc trong question.php */
+.end-container {
+    padding: 40px;
+}
+
+.end-container img {
+    width: 150px;
+    margin-bottom: 20px;
+}
+
+.end-container h1 {
+    color: #333;
+    font-size: 2em;
+}
+
+.end-container p {
+    color: #555;
+    font-size: 1.2em;
+    margin: 10px 0;
+}
+
+.exit-button {
+    background-color: #ccc;
+    margin-top: 20px;
+}
+
+.exit-button:hover {
+    background-color: #aaa;
+}
+
+/* Responsive cho màn hình nhỏ (điện thoại) */
+@media (max-width: 600px) {
+    .div-container, .level-container, .question-container, .end-container {
+        padding: 15px;
+        margin: 10px;
+    }
+
+    h1 {
+        font-size: 1.2em;
+    }
+
+    /* Responsive cho level.php */
+    .level-grid {
+        gap: 15px;
+    }
+
+    .level-button {
+        width: 80px;
+        height: 80px;
+        font-size: 0.9em;
+    }
+
+    /* Responsive cho topics.php */
+    .topic-button {
+        font-size: 1em;
+        padding: 8px;
+    }
+
+    /* Responsive cho question.php */
+    label {
+        font-size: 1em;
+    }
+
+    .answer-button, .next-button, .exit-button {
+        font-size: 1em;
+        padding: 8px 16px;
+    }
+
+    .end-container h1 {
+        font-size: 1.5em;
+    }
+
+    .end-container p {
+        font-size: 1em;
+    }
+}

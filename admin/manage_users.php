@@ -17,6 +17,8 @@ $result = $conn->query($sql);
         h1 {font-size: 1.8em; text-align: left; margin-left: 10%;}
         .btn {width: 100px; height: 40px; font-size: 1.2em; font-weight: bold; text-align: center; border: none; border-radius: 10px; cursor: pointer;}
         .btn-add {background-color: green; color: white; margin-left: 10%; margin-bottom: 10px;}
+        .btn-logout {background-color: burlywood; color: white;}
+        .btn-update {background-color: blue; color: white;}
         .btn-edit {background-color: yellow; color: black;}
         .btn-delete {background-color: red; color: black;}
         .btn:hover { opacity: 0.8;}
@@ -29,6 +31,8 @@ $result = $conn->query($sql);
 
     <h1>Xin chào, Admin!</h1>
     <button class="btn btn-add" onclick="window.location.href='add_account.php'">Thêm</button>
+    <button class="btn btn-update" onclick="window.location.href='../generate_missing_qr.php'">Cập nhật</button>
+    <button class="btn btn-logout" onclick="window.location.href='../logout.php'">Thoát</button>
 
     <table>
         <thead>

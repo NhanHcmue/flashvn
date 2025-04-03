@@ -11,6 +11,7 @@ $teacher_username = $_SESSION['username'];
 $teacher_id = $_SESSION['user_id'];
 $qr_code = "";
 
+// Lấy qr_code từ cơ sở dữ liệu
 $sql = "SELECT qr_code FROM users WHERE username = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $teacher_username);
@@ -20,10 +21,17 @@ $result = $stmt->get_result();
 if ($result->num_rows > 0) {
     $row = $result->fetch_assoc();
     $qr_code = $row['qr_code'];
+} else {
+    echo "Không tìm thấy thông tin giáo viên.";
+    exit;
 }
 
-$stmt->close(); 
+$stmt->close();
 
+// Lấy 4 ký tự cuối của qr_code làm mã phòng
+$pin_code = substr($qr_code, -4); // Lấy 4 ký tự cuối
+
+// Lấy danh sách chủ đề
 $sql = "
     SELECT t.id, t.title, t.description, t.level, 
            (SELECT COUNT(*) FROM questions q WHERE q.topic_id = t.id) AS total_questions 
@@ -60,8 +68,8 @@ $stmt->close();
         th {background-color: gray; color: white;}
         #qr-container {display: none; margin-top: 20px; text-align: center; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3); border-radius: 10px;}
         .close-button {background-color: red; color: white; margin-top: 10px; border-radius: 10px;}
+        .pin-code {margin-top: 10px; font-size: 1.2em; font-weight: bold; color: #333;}
     </style>
-    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
 </head>
 <body>
     <h1>Xin chào, Giáo viên!</h1>
@@ -70,7 +78,15 @@ $stmt->close();
         <button class="btn btn-qr" onclick="showQRCode()">QR</button>
         <div id="qr-container">
             <p>Quét mã QR để tiếp tục:</p>
-            <div id="qrcode"></div>
+            <?php
+            $qr_image_path = "../image/qrcodes/{$qr_code}.png";
+            if (file_exists($qr_image_path)) {
+                echo "<img src='{$qr_image_path}' alt='Mã QR' style='width: 400px; height: 400px;'>";
+            } else {
+                echo "<p>Không tìm thấy hình ảnh mã QR!</p>";
+            }
+            ?>
+            <div class="pin-code">Mã: <?php echo htmlspecialchars($pin_code); ?></div>
             <button class="close-button" onclick="hideQRCode()">Đóng</button>
         </div>
         <button class="btn btn-logout" onclick="window.location.href='../logout.php'">Thoát</button>
@@ -117,19 +133,7 @@ $stmt->close();
         }
 
         function showQRCode() {
-            let qrContainer = document.getElementById("qr-container");
-            qrContainer.style.display = "block";
-
-            let qrDiv = document.getElementById("qrcode");
-            qrDiv.innerHTML = "";
-
-            let qrData = "https://flashvn.org/level.php?teacher=<?php echo urlencode($qr_code); ?>";
-
-            new QRCode(qrDiv, {
-                text: qrData,
-                width: 400,
-                height: 400
-            });
+            document.getElementById("qr-container").style.display = "block";
         }
     </script>
 </body>

@@ -56,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Sinh ảnh QR
         $qr_image = $qr_dir . $qr_code . ".png";
-        QRcode::png("https://flashvn.org/level.php?user_id=$qr_code", $qr_image, QR_ECLEVEL_L, 5);
+        QRcode::png("https://localhost/flashvn/level.php?user_id=$qr_code", $qr_image, QR_ECLEVEL_L, 5);
 
         echo "<script>alert('Thêm tài khoản thành công!'); window.location.href = 'manage_users.php';</script>";
     } else {

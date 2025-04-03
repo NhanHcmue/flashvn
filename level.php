@@ -1,26 +1,48 @@
 <?php
-require "../config/db.php";
+require "config/db.php";
 
-// Kiểm tra xem có `user_id` từ mã QR không
+// Kiểm tra tham số user_id
 if (!isset($_GET['user_id'])) {
-    die("Lỗi: Không tìm thấy ID giáo viên!");
+    die("Lỗi: Thiếu thông tin giáo viên!");
 }
 
-$teacher_qr = $_GET['user_id'];
+$user_id = trim($_GET['user_id']);
 
-// Tìm ID của giáo viên dựa trên mã QR trong database
-$stmt = $conn->prepare("SELECT id FROM users WHERE qr_code = ?");
-$stmt->bind_param("s", $teacher_qr);
-$stmt->execute();
-$result = $stmt->get_result();
-$row = $result->fetch_assoc();
-
-if (!$row) {
-    die("Lỗi: Mã QR không hợp lệ!");
+// Xác định teacher_id dựa trên kiểu của user_id
+$teacher_id = 0;
+if (is_numeric($user_id)) {
+    $stmt = $conn->prepare("SELECT id FROM users WHERE id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $stmt->store_result();
+    if ($stmt->num_rows > 0) {
+        $stmt->bind_result($teacher_id);
+        $stmt->fetch();
+    }
+    $stmt->close();
+} else {
+    $stmt = $conn->prepare("SELECT id FROM users WHERE qr_code = ?");
+    $stmt->bind_param("s", $user_id);
+    $stmt->execute();
+    $stmt->store_result();
+    if ($stmt->num_rows > 0) {
+        $stmt->bind_result($teacher_id);
+        $stmt->fetch();
+    }
+    $stmt->close();
 }
 
-$teacher_id = $row['id']; // Lưu ID giáo viên
+if ($teacher_id === 0) {
+    die("Lỗi: Giáo viên không tồn tại!");
+}
 
+// Danh sách các cấp độ
+$levels = [
+    ['name' => 'Lớp 1-2', 'value' => '1-2', 'color' => '#ffe082'], // Vàng nhạt
+    ['name' => 'Lớp 3-5', 'value' => '3-5', 'color' => '#81c784'], // Xanh lá
+    ['name' => 'Lớp 6-8', 'value' => '6-8', 'color' => '#64b5f6'], // Xanh dương
+    ['name' => 'Lớp 9-12', 'value' => '9-12', 'color' => '#ef5350'] // Đỏ
+];
 ?>
 
 <!DOCTYPE html>
@@ -28,17 +50,22 @@ $teacher_id = $row['id']; // Lưu ID giáo viên
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style2.css">
-    <title>Chọn Độ Tuổi</title>
+    <title>Chọn Cấp Độ</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Chào bạn!</h1>
-    <p>Vui lòng chọn độ tuổi để bắt đầu</p>
-    <div class="container">
-        <a href="topics.php?user_id=<?= $teacher_id ?>&age=1-2" class="button box-1">Lớp 1-2</a>
-        <a href="topics.php?user_id=<?= $teacher_id ?>&age=3-5" class="button box-2">Lớp 3-5</a>
-        <a href="topics.php?user_id=<?= $teacher_id ?>&age=6-8" class="button box-3">Lớp 6-8</a>
-        <a href="topics.php?user_id=<?= $teacher_id ?>&age=9-12" class="button box-4">Lớp 9-12</a>
+    <div class="level-container">
+        <h1>Chào bạn</h1>
+        <p>Vui lòng chọn độ tuổi</p>
+        <div class="level-grid">
+            <?php foreach ($levels as $level): ?>
+                <a href="topics.php?user_id=<?= $teacher_id ?>&age=<?= $level['value'] ?>" 
+                   class="level-button" 
+                   style="background-color: <?= $level['color'] ?>;">
+                    <?= htmlspecialchars($level['name']) ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
     </div>
 </body>
 </html>
