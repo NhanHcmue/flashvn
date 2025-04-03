@@ -73,7 +73,7 @@ $stmt->close();
             <div id="qrcode"></div>
             <button class="close-button" onclick="hideQRCode()">Đóng</button>
         </div>
-        <button class="btn btn-logout" onclick="window.location.href='logout.php'">Thoát</button>
+        <button class="btn btn-logout" onclick="window.location.href='../logout.php'">Thoát</button>
     </div>
 
 
