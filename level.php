@@ -1,14 +1,11 @@
 <?php
 require "config/db.php";
 
-// Kiểm tra tham số user_id
 if (!isset($_GET['user_id'])) {
     die("Lỗi: Thiếu thông tin giáo viên!");
 }
 
 $user_id = trim($_GET['user_id']);
-
-// Xác định teacher_id dựa trên kiểu của user_id
 $teacher_id = 0;
 if (is_numeric($user_id)) {
     $stmt = $conn->prepare("SELECT id FROM users WHERE id = ?");
@@ -35,8 +32,6 @@ if (is_numeric($user_id)) {
 if ($teacher_id === 0) {
     die("Lỗi: Giáo viên không tồn tại!");
 }
-
-// Danh sách các cấp độ
 $levels = [
     ['name' => 'Lớp 1-2', 'value' => '1-2', 'color' => '#ffe082'], // Vàng nhạt
     ['name' => 'Lớp 3-5', 'value' => '3-5', 'color' => '#81c784'], // Xanh lá

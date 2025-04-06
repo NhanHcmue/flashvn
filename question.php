@@ -173,7 +173,7 @@ shuffle($options); // Tráo ngẫu nhiên câu trả lời
 
         function rollDice() {
             const dice = document.getElementById('dice');
-            dice.className = 'dice'; // Reset class
+            dice.className = 'dice';
             setTimeout(() => {
                 currentDiceValue = Math.floor(Math.random() * 6) + 1;
                 dice.className = `dice show-${currentDiceValue}`;
@@ -221,10 +221,10 @@ shuffle($options); // Tráo ngẫu nhiên câu trả lời
         }
 
         function nextQuestion() {
-            rollDice();
             setTimeout(() => {
                 window.location.href = `question.php?user_id=<?= htmlspecialchars($user_id) ?>&topic_id=<?= $topic_id ?>`;
             }, 800);
+            rollDice();
         }
     </script>
 </head>

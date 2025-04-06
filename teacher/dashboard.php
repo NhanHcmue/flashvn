@@ -1,17 +1,15 @@
 <?php
-include '../config/db.php';
-
 session_start();
-if (!isset($_SESSION['username'])) {
-    echo "Bạn chưa đăng nhập.";
-    exit;
-}
+require "../config/db.php";
+require "../helpers/session_helper.php";
 
+
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
+    redirectWithError('../login.php', 'Vui lòng đăng nhập với tư cách giáo viên');
+}
 $teacher_username = $_SESSION['username'];
 $teacher_id = $_SESSION['user_id'];
 $qr_code = "";
-
-// Lấy qr_code từ cơ sở dữ liệu
 $sql = "SELECT qr_code FROM users WHERE username = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $teacher_username);
@@ -22,21 +20,19 @@ if ($result->num_rows > 0) {
     $row = $result->fetch_assoc();
     $qr_code = $row['qr_code'];
 } else {
-    echo "Không tìm thấy thông tin giáo viên.";
+    $_SESSION['error'] = "Không tìm thấy thông tin giáo viên";
+    header("Location: ../login.php");
     exit;
 }
 
 $stmt->close();
-
-// Lấy 4 ký tự cuối của qr_code làm mã phòng
-$pin_code = substr($qr_code, -4); // Lấy 4 ký tự cuối
-
-// Lấy danh sách chủ đề
+$pin_code = substr($qr_code, -4);
 $sql = "
     SELECT t.id, t.title, t.description, t.level, 
            (SELECT COUNT(*) FROM questions q WHERE q.topic_id = t.id) AS total_questions 
     FROM topics t
     WHERE t.create_by = (SELECT id FROM users WHERE username = ?)
+    ORDER BY t.id DESC
 ";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $teacher_username);
@@ -45,95 +41,124 @@ $result = $stmt->get_result();
 $stmt->close();
 ?>
 
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Giáo viên</title>
-    <style>
-        body {padding: 20px; font-family: Arial, sans-serif;}
-        h1 {font-size: 1.8em; text-align: left; margin-left: 10%;}
-        .btn-container {display: flex; gap: 10px; margin-bottom: 15px; margin-left: 10%;}
-        .btn {width: 100px; height: 40px; font-size: 1.2em; font-weight: bold; text-align: center; border: none; border-radius: 10px; cursor: pointer;}
-        .btn-add {background-color: green; color: white;}
-        .btn-logout {background-color: burlywood; color: white;}
-        .btn-qr, .close-button {background-color: gray; color: white;}
-        .btn-edit {background-color: yellow; color: black;}
-        .btn-delete {background-color: red; color: black;}
-        .btn:hover { opacity: 0.8;}
-        table {width: 80%; margin: 0 auto; border-collapse: collapse; font-size: 1.2em;}
-        th, td {padding: 10px; text-align: center;}
-        th {background-color: gray; color: white;}
-        #qr-container {display: none; margin-top: 20px; text-align: center; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3); border-radius: 10px;}
-        .close-button {background-color: red; color: white; margin-top: 10px; border-radius: 10px;}
-        .pin-code {margin-top: 10px; font-size: 1.2em; font-weight: bold; color: #333;}
-    </style>
+    <title>Dashboard Giáo Viên</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Xin chào, Giáo viên!</h1>
-    <div class="btn-container">
-        <button class="btn btn-add" onclick="window.location.href='add.html'">Thêm</button>
-        <button class="btn btn-qr" onclick="showQRCode()">QR</button>
-        <div id="qr-container">
-            <p>Quét mã QR để tiếp tục:</p>
-            <?php
-            $qr_image_path = "../image/qrcodes/{$qr_code}.png";
-            if (file_exists($qr_image_path)) {
-                echo "<img src='{$qr_image_path}' alt='Mã QR' style='width: 400px; height: 400px;'>";
-            } else {
-                echo "<p>Không tìm thấy hình ảnh mã QR!</p>";
-            }
-            ?>
-            <div class="pin-code">Mã: <?php echo htmlspecialchars($pin_code); ?></div>
-            <button class="close-button" onclick="hideQRCode()">Đóng</button>
+    <div class="container">
+        <header>
+            <h1 class="welcome-message">Xin chào, <span><?php echo htmlspecialchars($teacher_username); ?></span></h1>
+            <div class="action-buttons">
+                <button class="btn btn-success" onclick="window.location.href='add_topic.php'">
+                    <i class="fas fa-plus"></i> Thêm chủ đề
+                </button>
+                <button class="btn btn-info" onclick="showQRCode()">
+                    <i class="fas fa-qrcode"></i> Mã QR
+                </button>
+                <button class="btn btn-danger" onclick="window.location.href='../logout.php'">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                </button>
+            </div>
+        </header>
+
+        <div class="card">
+            <h2 class="card-title">Danh sách chủ đề</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Chủ đề</th>
+                        <th>Mô tả</th>
+                        <th>Độ tuổi</th>
+                        <th>Số câu hỏi</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while ($row = $result->fetch_assoc()) : ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($row['title']); ?></td>
+                            <td><?php echo htmlspecialchars($row['description']); ?></td>
+                            <td><span class="badge badge-primary"><?php echo htmlspecialchars($row['level']); ?></span></td>
+                            <td><span class="badge badge-success"><?php echo $row['total_questions']; ?></span></td>
+                            <td class="action-cell">
+                                <button class="btn btn-warning btn-sm" onclick="editTopic(<?php echo $row['id']; ?>)">
+                                    <i class="fas fa-edit"></i> Sửa
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="confirmDelete(<?php echo $row['id']; ?>)">
+                                    <i class="fas fa-trash-alt"></i> Xóa
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
         </div>
-        <button class="btn btn-logout" onclick="window.location.href='../logout.php'">Thoát</button>
     </div>
 
+    <!-- Modal QR Code -->
+    <div id="qrModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="hideQRCode()">&times;</span>
+            <h2>Mã QR điểm danh</h2>
+            <p>Quét mã QR này để tham gia lớp học</p>
+            
+            <div class="qr-code">
+                <?php
+                $qr_image_path = "../image/qrcodes/{$qr_code}.png";
+                if (file_exists($qr_image_path)) {
+                    echo "<img src='{$qr_image_path}' alt='Mã QR'>";
+                } else {
+                    echo "<p>Không tìm thấy hình ảnh mã QR</p>";
+                }
+                ?>
+            </div>
+            
+            <div class="pin-code">Mã PIN: <?php echo htmlspecialchars($pin_code); ?></div>
+            
+            <button class="btn btn-primary" onclick="hideQRCode()">
+                <i class="fas fa-check"></i> Đã hiểu
+            </button>
+        </div>
+    </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Chủ đề</th>
-                <th>Mô tả</th>
-                <th>Độ tuổi</th>
-                <th>Số câu hỏi</th>
-                <th>Thao tác</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php while ($row = $result->fetch_assoc()) : ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($row['title']); ?></td>
-                    <td><?php echo htmlspecialchars($row['description']); ?></td>
-                    <td><?php echo htmlspecialchars($row['level']); ?></td>
-                    <td><?php echo $row['total_questions']; ?></td>
-                    <td>
-                        <button class="btn btn-edit" onclick="editTopic(<?php echo $row['id']; ?>)">Sửa</button>
-                        <button class="btn btn-delete" onclick="deleteTopic(<?php echo $row['id']; ?>)">Xóa</button>
-                    </td>
-                </tr>
-            <?php endwhile; ?>
-        </tbody>
-    </table>
     <script>
+        function showQRCode() {
+            document.getElementById('qrModal').style.display = 'flex';
+        }
         function hideQRCode() {
-            document.getElementById("qr-container").style.display = "none";
+            document.getElementById('qrModal').style.display = 'none';
         }
         function editTopic(id) {
-            window.location.href = 'edit.php?id=' + id;
+            window.location.href = 'edit_topic.php?id=' + id;
         }
 
-        function deleteTopic(id) {
-            if (confirm("Bạn có chắc muốn xóa câu hỏi này?")) {
-                window.location.href = 'delete.php?id=' + id;
+        function confirmDelete(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa chủ đề này? Tất cả câu hỏi liên quan cũng sẽ bị xóa!')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'delete_topic.php';
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'topic_id';
+                input.value = id;
+                
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
             }
         }
-
-        function showQRCode() {
-            document.getElementById("qr-container").style.display = "block";
+        window.onclick = function(event) {
+            const modal = document.getElementById('qrModal');
+            if (event.target === modal) {
+                hideQRCode();
+            }
         }
     </script>
 </body>

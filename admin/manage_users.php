@@ -1,79 +1,113 @@
 <?php
-include '../config/db.php'; // Kết nối database
-
-// Truy vấn danh sách tài khoản từ bảng users
-$sql = "SELECT id, username, email FROM users";
+include '../config/db.php';
+$sql = "SELECT id, username, email, role, qr_code FROM users ORDER BY id ASC";
 $result = $conn->query($sql);
+
+if (!$result) {
+    die("Lỗi truy vấn: " . $conn->error);
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="vi">
-<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Admin</title>
-    <style>
-        body {padding: 20px; font-family: Arial, sans-serif;}
-        h1 {font-size: 1.8em; text-align: left; margin-left: 10%;}
-        .btn {width: 100px; height: 40px; font-size: 1.2em; font-weight: bold; text-align: center; border: none; border-radius: 10px; cursor: pointer;}
-        .btn-add {background-color: green; color: white; margin-left: 10%; margin-bottom: 10px;}
-        .btn-logout {background-color: burlywood; color: white;}
-        .btn-update {background-color: blue; color: white;}
-        .btn-edit {background-color: yellow; color: black;}
-        .btn-delete {background-color: red; color: black;}
-        .btn:hover { opacity: 0.8;}
-        table {width: 80%; margin: 0 auto; border-collapse: collapse; font-size: 1.2em;}
-        th, td {padding: 10px; text-align: center;}
-        th {background-color: gray; color: white;}
-    </style>
+    <title>Quản lý tài khoản - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="admin.css">
 </head>
 <body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1 class="admin-title">
+                <i class="fas fa-users-cog"></i> Quản lý tài khoản
+            </h1>
+            <div class="admin-actions">
+                <button class="btn btn-success" onclick="window.location.href='add_account.php'">
+                    <i class="fas fa-plus"></i> Thêm mới
+                </button>
+                <button class="btn btn-info" onclick="window.location.href='../generate_missing_qr.php'">
+                    <i class="fas fa-qrcode"></i> Tạo QR
+                </button>
+                <button class="btn btn-danger" onclick="window.location.href='../logout.php'">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                </button>
+            </div>
+        </div>
 
-    <h1>Xin chào, Admin!</h1>
-    <button class="btn btn-add" onclick="window.location.href='add_account.php'">Thêm</button>
-    <button class="btn btn-update" onclick="window.location.href='../generate_missing_qr.php'">Cập nhật</button>
-    <button class="btn btn-logout" onclick="window.location.href='../logout.php'">Thoát</button>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Tên tài khoản</th>
-                <th>Email</th>
-                <th>Thao tác</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            if ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                    echo "<tr>
-                        <td>{$row['username']}</td>
-                        <td>{$row['email']}</td>
-                        <td>
-                            <button class='btn btn-edit' onclick='editUser({$row['id']})'>Sửa</button>
-                            <button class='btn btn-delete' onclick='deleteUser({$row['id']})'>Xóa</button>
-                        </td>
-                    </tr>";
-                }
-            } else {
-                echo "<tr><td colspan='3'>Không có tài khoản nào</td></tr>";
-            }
-            $conn->close();
-            ?>
-        </tbody>
-    </table>
+        <div class="card">
+            <div class="card-title">Danh sách tài khoản</div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên đăng nhập</th>
+                        <th>Email</th>
+                        <th>Vai trò</th>
+                        <th>Mã QR</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if ($result->num_rows > 0): ?>
+                        <?php while ($row = $result->fetch_assoc()): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($row['id']); ?></td>
+                                <td><?php echo htmlspecialchars($row['username']); ?></td>
+                                <td><?php echo htmlspecialchars($row['email']); ?></td>
+                                <td>
+                                    <span class="badge badge-<?php echo strtolower($row['role']); ?>">
+                                        <?php echo htmlspecialchars($row['role']); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <?php if (!empty($row['qr_code'])): ?>
+                                        <img src="../image/qrcodes/<?php echo htmlspecialchars($row['qr_code']); ?>.png" class="qr-code" alt="Mã QR">
+                                    <?php else: ?>
+                                        <span class="badge" style="background-color: rgba(255, 193, 7, 0.1); color: #d39e00;">
+                                            Chưa có
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="action-buttons">
+                                    <button class="btn btn-warning btn-sm" onclick="editUser(<?php echo $row['id']; ?>)">
+                                        <i class="fas fa-edit"></i> Sửa
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="confirmDelete(<?php echo $row['id']; ?>)">
+                                        <i class="fas fa-trash-alt"></i> Xóa
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <i class="fas fa-user-slash"></i>
+                                    <p>Không có tài khoản nào</p>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <script>
         function editUser(id) {
             window.location.href = 'edit_account.php?id=' + id;
         }
 
-        function deleteUser(id) {
-            if (confirm("Bạn có chắc muốn xóa tài khoản này?")) {
+        function confirmDelete(id) {
+            if (confirm("Bạn có chắc chắn muốn xóa tài khoản này?\nHành động này không thể hoàn tác!")) {
                 window.location.href = 'delete_account.php?id=' + id;
             }
         }
     </script>
-
 </body>
 </html>
+<?php
+$conn->close();
+?>

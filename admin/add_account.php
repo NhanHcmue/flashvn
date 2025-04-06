@@ -1,10 +1,9 @@
 <?php
 require "../config/db.php";
-include "../libs/phpqrcode/qrlib.php"; // Thư viện tạo mã QR
+include "../libs/phpqrcode/qrlib.php";
 
-// Hàm tạo mã QR từ email
 function generateQRCode($email) {
-    return md5($email); // Tạo chuỗi duy nhất từ email
+    return md5($email);
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -13,23 +12,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = trim($_POST["password"]);
     $confirmpass = trim($_POST["confirmpass"]);
     $role = $_POST["role"];
-
-    // Kiểm tra email hợp lệ
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         echo "<script>alert('Email không hợp lệ!');</script>";
         exit;
     }
-
-    // Kiểm tra mật khẩu trùng khớp
     if ($password !== $confirmpass) {
         echo "<script>alert('Mật khẩu xác nhận không khớp!');</script>";
         exit;
     }
-
-    // Mã hóa mật khẩu
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-    // Kiểm tra email đã tồn tại chưa
     $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
@@ -39,22 +30,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo "<script>alert('Email đã tồn tại!');</script>";
         exit;
     }
-
-    // Tạo mã QR
     $qr_code = generateQRCode($email);
-
-    // Thêm tài khoản vào database
     $stmt = $conn->prepare("INSERT INTO users (username, email, password, role, qr_code) VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("sssss", $username, $email, $hashedPassword, $role, $qr_code);
 
     if ($stmt->execute()) {
-        // Tạo thư mục lưu QR nếu chưa có
         $qr_dir = "../image/qrcodes/";
         if (!file_exists($qr_dir)) {
             mkdir($qr_dir, 0777, true);
         }
-
-        // Sinh ảnh QR
         $qr_image = $qr_dir . $qr_code . ".png";
         QRcode::png("https://localhost/flashvn/level.php?user_id=$qr_code", $qr_image, QR_ECLEVEL_L, 5);
 
@@ -67,50 +51,108 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 $conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thêm tài khoản</title>
-    <style>
-        body { text-align: center; padding: 20px; }
-        h1 { background-color: green; color: white; padding: 10px; border-radius: 5px; }
-        form { width: 60%; margin: auto; }
-        label { font-size: 1.2em; font-weight: bold; display: block; text-align: left; margin: 10px 0; }
-        input, select { width: 100%; padding: 10px; border: 2px solid black; font-size: 1.1em; }
-        button { padding: 10px 20px; font-size: 1.2em; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; }
-        .btn-add { background-color: yellow; }
-        .btn-cancel { background-color: orange; color: white; }
-        .btn-add:hover, .btn-cancel:hover { opacity: 0.8; }
-    </style>
+    <title>Thêm tài khoản mới</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="admin.css">
 </head>
 <body>
+    <div class="form-container">
+        <div class="form-header">
+            <h1><i class="fas fa-user-plus"></i> Thêm tài khoản mới</h1>
+            <p>Điền đầy đủ thông tin để tạo tài khoản mới</p>
+        </div>
 
-    <h1>Thêm tài khoản</h1> 
-    <form method="POST">
-        <label for="username">Tên tài khoản</label>
-        <input id="username" name="username" required>
+        <div id="errorAlert" class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i> <span id="errorMessage"></span>
+        </div>
 
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" required>
+        <form method="POST" id="accountForm">
+            <div class="form-group">
+                <label for="username"><i class="fas fa-user"></i> Tên tài khoản</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+            </div>
 
-        <label for="password">Mật khẩu</label>
-        <input id="password" name="password" type="password" required>
+            <div class="form-group">
+                <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
 
-        <label for="confirmpass">Xác nhận mật khẩu</label>
-        <input id="confirmpass" name="confirmpass" type="password" required>
+            <div class="form-group">
+                <label for="password"><i class="fas fa-lock"></i> Mật khẩu</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
 
-        <label for="role">Vai trò</label>
-        <select id="role" name="role" required>
-            <option value="">Vui lòng chọn vai trò</option>
-            <option value="teacher">Giáo viên</option>
-            <option value="admin">Admin</option>
-        </select>   
+            <div class="form-group">
+                <label for="confirmpass"><i class="fas fa-lock"></i> Xác nhận mật khẩu</label>
+                <input type="password" class="form-control" id="confirmpass" name="confirmpass" required>
+            </div>
 
-        <button type="submit" name="submit" class="btn-add">Thêm</button>
-        <button type="button" class="btn-cancel" onclick="window.location.href='manage_users.php'">Hủy</button>
-    </form>
+            <div class="form-group">
+                <label for="role"><i class="fas fa-user-tag"></i> Vai trò</label>
+                <select class="form-control" id="role" name="role" required>
+                    <option value="">-- Chọn vai trò --</option>
+                    <option value="teacher">Giáo viên</option>
+                    <option value="admin">Quản trị viên</option>
+                </select>
+            </div>
 
+            <div class="form-actions">
+                <button type="button" class="btn btn-outline" onclick="window.location.href='manage_users.php'">
+                    <i class="fas fa-times"></i> Hủy bỏ
+                </button>
+                <button type="submit" name="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Lưu tài khoản
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Xử lý hiển thị thông báo lỗi từ PHP
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        
+        if (error) {
+            document.getElementById('errorMessage').textContent = decodeURIComponent(error);
+            document.getElementById('errorAlert').style.display = 'block';
+        }
+
+        // Validate form trước khi submit
+        document.getElementById('accountForm').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const confirmpass = document.getElementById('confirmpass').value;
+            const email = document.getElementById('email').value;
+            const errorAlert = document.getElementById('errorAlert');
+            
+            // Kiểm tra email hợp lệ
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                e.preventDefault();
+                document.getElementById('errorMessage').textContent = 'Email không hợp lệ!';
+                errorAlert.style.display = 'block';
+                return;
+            }
+            
+            // Kiểm tra mật khẩu trùng khớp
+            if (password !== confirmpass) {
+                e.preventDefault();
+                document.getElementById('errorMessage').textContent = 'Mật khẩu xác nhận không khớp!';
+                errorAlert.style.display = 'block';
+                return;
+            }
+            
+            // Kiểm tra độ dài mật khẩu
+            if (password.length < 6) {
+                e.preventDefault();
+                document.getElementById('errorMessage').textContent = 'Mật khẩu phải có ít nhất 6 ký tự!';
+                errorAlert.style.display = 'block';
+            }
+        });
+    </script>
 </body>
 </html>
