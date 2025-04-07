@@ -73,6 +73,7 @@ $stmt->close();
             <table>
                 <thead>
                     <tr>
+                        <th>STT</th>
                         <th>Chủ đề</th>
                         <th>Mô tả</th>
                         <th>Độ tuổi</th>
@@ -81,8 +82,11 @@ $stmt->close();
                     </tr>
                 </thead>
                 <tbody>
+                    <?php  $stt = 1 ?>
                     <?php while ($row = $result->fetch_assoc()) : ?>
                         <tr>
+                            <td><?php echo htmlspecialchars($stt); ?></td>
+                             <?php  $stt++ ?>
                             <td><?php echo htmlspecialchars($row['title']); ?></td>
                             <td><?php echo htmlspecialchars($row['description']); ?></td>
                             <td><span class="badge badge-primary"><?php echo htmlspecialchars($row['level']); ?></span></td>

@@ -47,16 +47,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $topic_id = $conn->insert_id;
         $stmt->close();
-
         if (!empty($_POST['questions'])) {
-            foreach ($_POST['questions'] as $question) {
+            $questions = array_values($_POST['questions']);
+            
+            foreach ($questions as $question) {
                 $content = trim($question['content'] ?? '');
                 $correct_answer = (int)($question['correct_answer'] ?? 0);
                 
                 if (empty($content)) {
                     throw new Exception("Nội dung câu hỏi không được để trống!");
                 }
-
+        
                 $stmt = $conn->prepare("INSERT INTO questions (content, topic_id) VALUES (?, ?)");
                 $stmt->bind_param("si", $content, $topic_id);
                 
@@ -66,9 +67,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 $question_id = $conn->insert_id;
                 $stmt->close();
-
+        
                 if (!empty($question['answers'])) {
-                    foreach ($question['answers'] as $index => $answer_content) {
+                    $answers = array_values($question['answers']);
+                    
+                    foreach ($answers as $index => $answer_content) {
                         $answer_content = trim($answer_content ?? '');
                         $is_correct = ($index == $correct_answer) ? 1 : 0;
                         
@@ -214,8 +217,6 @@ function displayAddTopicForm() {
                 </div>
             </div>
         </div>
-
-        <!-- Template cho câu hỏi -->
         <template id="questionTemplate">
             <div class="question-container">
                 <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 remove-question" 
@@ -266,19 +267,20 @@ function displayAddTopicForm() {
                 const addQuestionBtn = document.getElementById('addQuestionBtn');
                 const questionTemplate = document.getElementById('questionTemplate');
                 
+                let questionCounter = 0;
+                
                 function addQuestion() {
                     const questionClone = questionTemplate.content.cloneNode(true);
-                    const questionIndex = document.querySelectorAll('.question-container').length;
                     const questionDiv = questionClone.querySelector('.question-container');
-                    
                     questionDiv.querySelectorAll('[name]').forEach(input => {
-                        const name = input.name.replace(/\[\d*\]/g, `[${questionIndex}]`);
+                        const name = input.name.replace(/\[\]/, `[${questionCounter}]`);
                         input.name = name;
                     });
                     
                     questionDiv.querySelector('.remove-question').addEventListener('click', function() {
                         if (confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')) {
                             questionDiv.remove();
+                            updateQuestionIndexes();
                         }
                     });
                     
@@ -295,10 +297,23 @@ function displayAddTopicForm() {
                     highlightCorrectAnswer();
                     
                     questionsContainer.appendChild(questionClone);
+                    questionCounter++;
+                }
+                function updateQuestionIndexes() {
+                    const questions = questionsContainer.querySelectorAll('.question-container');
+                    questionCounter = 0;
+                    
+                    questions.forEach((question, index) => {
+                        question.querySelectorAll('[name]').forEach(input => {
+                            const name = input.name.replace(/\[\d*\]/, `[${index}]`);
+                            input.name = name;
+                        });
+                        questionCounter++;
+                    });
                 }
                 
                 addQuestionBtn.addEventListener('click', addQuestion);
-                addQuestion();
+                addQuestion(); 
             });
         </script>
     </body>
