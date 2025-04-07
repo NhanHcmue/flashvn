@@ -90,7 +90,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-
         $conn->commit();
         redirectWithSuccess('dashboard.php', 'Thêm chủ đề mới thành công!');
         exit();
@@ -120,36 +119,6 @@ function displayAddTopicForm() {
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
         <link rel="stylesheet" href="styles.css">
-        <style>
-            .question-container {
-                border: 1px solid #dee2e6;
-                padding: 1.5rem;
-                margin-bottom: 1.5rem;
-                border-radius: 0.375rem;
-                background-color: #f8f9fa;
-                position: relative;
-            }
-            .answer-container {
-                margin-bottom: 1rem;
-                padding: 0.75rem;
-                border-radius: 0.25rem;
-            }
-            .correct-answer {
-                background-color: #e6f7e6;
-                border-left: 4px solid #28a745;
-            }
-            .form-section {
-                background-color: white;
-                border-radius: 0.5rem;
-                padding: 2rem;
-                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-                margin-bottom: 2rem;
-            }
-            .error-list {
-                list-style-type: none;
-                padding-left: 0;
-            }
-        </style>
     </head>
     <body class="bg-light">
         <div class="container py-4">
