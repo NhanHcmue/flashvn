@@ -28,7 +28,7 @@ if ($result->num_rows > 0) {
         }
 
         // Tạo URL cho mã QR với tên miền mới
-        $qr_url = "https://localhost/flashvn/level.php?user_id=" . urlencode($qr_code);
+        $qr_url = "http://flashvn.infy.uk/level.php?user_id=" . urlencode($qr_code);
         // Tạo và lưu hình ảnh mã QR
         QRcode::png($qr_url, $qr_image_path, QR_ECLEVEL_L, 5);
 
